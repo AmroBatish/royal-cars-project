@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Owner</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    <h2 class="mb-4">Register as Owner</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Phone</label>
+            <input type="text" name="phone" class="form-control">
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Company Name</label>
+            <input type="text" name="company_name" class="form-control" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+</body>
+</html>
