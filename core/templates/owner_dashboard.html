@@ -176,55 +176,62 @@
     </table>
     </div>
     <!-- Bookings -->
-     <div class="container-fluid bg-white  py-5">
-    <h3 class="mt-5 mb-3">Bookings</h3>
-    <table class="table table-bordered bg-white">
-        <thead class="thead-dark">
-            <tr>
-                <th>Client</th>
-                <th>Car</th>
-                <th>Pickup</th>
-                <th>Drop</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for booking in bookings %}
-            <tr>
-                <td>{{ booking.user.username }}</td>
-                <td>{{ booking.car.name }}</td>
-                <td>{{ booking.pickup_location }}</td>
-                <td>{{ booking.drop_location }}</td>
-                <td>{{ booking.pickup_date }} {{ booking.pickup_time }}</td>
-                <td id="status-{{ booking.id }}">
-    {% if booking.status == "pending" %}
-        <span class="badge badge-warning">Pending</span>
-    {% elif booking.status == "approved" %}
-        <span class="badge badge-success">Approved</span>
-    {% else %}
-        <span class="badge badge-danger">Rejected</span>
-    {% endif %}
-</td>
-<td>
-    {% if booking.status == "pending" %}
-        <button class="btn btn-sm btn-success approve-btn" data-id="{{ booking.id }}">Approve</button>
-        <button class="btn btn-sm btn-danger reject-btn" data-id="{{ booking.id }}">Reject</button>
-    {% endif %}
-</td>
-                <td>
+    <div class="container-fluid bg-white  py-5">
+        <h3 class="mt-5 mb-3">Bookings</h3>
+        <table class="table table-bordered bg-white">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Client</th>
+                    <th>Car</th>
+                    <th>Pickup</th>
+                    <th>Drop</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.user.username }}</td>
+                    <td>{{ booking.car.name }}</td>
+                    <td>{{ booking.pickup_location }}</td>
+                    <td>{{ booking.drop_location }}</td>
+                    <td>{{ booking.pickup_date }} {{ booking.pickup_time }}</td>
+                    <td id="status-{{ booking.id }}">
                     {% if booking.status == "pending" %}
-                        <a href="{% url 'approve_booking' booking.id %}" class="btn btn-sm btn-success">Approve</a>
-                        <a href="{% url 'reject_booking' booking.id %}" class="btn btn-sm btn-danger">Reject</a>
+                        <span class="badge badge-warning">Pending</span>
+                    {% elif booking.status == "approved" %}
+                        <span class="badge badge-success">Approved</span>
+                    {% else %}
+                        <span class="badge badge-danger">Rejected</span>
                     {% endif %}
                 </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7" class="text-center">No bookings yet</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <!-- <td>
+                    {% if booking.status == "pending" %}
+                        <button class="btn btn-sm btn-success approve-btn" data-id="{{ booking.id }}">Approve</button>
+                        <button class="btn btn-sm btn-danger reject-btn" data-id="{{ booking.id }}">Reject</button>
+                    {% endif %}
+                </td> -->
+                <td class="text-center">
+                    {% if booking.status == "pending" %}
+                        <div class="btn-group" role="group" aria-label="Booking Actions">
+                            <a href="{% url 'approve_booking' booking.id %}" class="btn btn-sm btn-success px-3">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </a>
+                            <a href="{% url 'reject_booking' booking.id %}" class="btn btn-sm btn-danger px-3">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </a>
+                        </div>
+                    {% endif %}
+                </td>
+
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center">No bookings yet</td></tr>
+                            {% endfor %}
+            </tbody>
+        </table>
     </div>
     <!-- footer        //////////////////////   -->
     <div class="container-fluid bg-secondary py-5 px-sm-3 px-md-5" style="margin-top: 90px;">
