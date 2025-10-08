@@ -24,5 +24,8 @@ urlpatterns = [
     path('owner/<int:owner_id>/cars/', views.owner_cars, name="owner_cars"),
     path('owner/<int:owner_id>/', views.owner_profile, name="owner_profile"),
     path('companies/', views.companies_list, name="companies_list"),
-    path('payment/', views.payment, name='payment'),
+    path("my-bookings/", views.my_bookings, name="my_bookings"),
+    path("booking/<int:booking_id>/pay/", views.pay_booking, name="pay_booking"),
+    path("payment/success/", views.payment_success, name="payment_success"),
+    path("payment/cancel/", views.payment_cancel, name="payment_cancel"),
 ]

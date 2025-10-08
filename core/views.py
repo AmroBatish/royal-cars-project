@@ -1,12 +1,13 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404 , HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.conf import settings
-
+import stripe
 from .models import Booking, Car
 
 User = get_user_model()
@@ -46,9 +47,13 @@ def detail(request, pk):
     car = get_object_or_404(Car, pk=pk)
     return render(request, "detail.html", {"car": car})
 
-def payment(request):
-    return render(request, 'payment.html')
+def payment_success(request):
+    messages.success(request, "✅ Payment completed successfully!")
+    return redirect("profile")
 
+def payment_cancel(request):
+    messages.warning(request, "⚠️ Payment canceled.")
+    return redirect("profile")
 # ===========================
 # AUTHENTICATION
 # ===========================
@@ -180,6 +185,8 @@ def add_car(request):
 # ===========================
 @login_required(login_url="login")
 def booking_view(request):
+    if getattr(request.user, "role", None) == "owner":
+        return JsonResponse({"status": "error", "message": "Owners cannot create bookings."}, status=403)
     if request.method == "POST":
         car = get_object_or_404(Car, pk=request.POST.get("car"))
         required_fields = [request.POST.get(f) for f in ["pickup_location", "drop_location", "pickup_date", "pickup_time"]]
@@ -238,6 +245,140 @@ def reject_booking(request, booking_id):
 
     messages.warning(request, "❌ Booking rejected.")
     return redirect("owner_dashboard")
+
+@login_required(login_url="login")
+def my_bookings(request):
+    bookings = Booking.objects.filter(user=request.user).select_related("car")
+
+    return render(request, "my_bookings.html", {
+        "bookings": bookings
+    })
+
+@login_required(login_url="login")
+def pay_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+
+    if booking.status != "approved":
+        messages.warning(request, "⚠️ You can only pay after the owner approves your booking.")
+        return redirect("my_bookings")
+    # مبلغ الدفع (سعر اليوم الواحد) بالسنت
+    amount_cents = int(float(booking.car.price) * 100)
+
+    # جلسة Stripe Checkout
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        payment_method_types=["card"],
+        line_items=[
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": f"{booking.car.name} ",
+                                "description": f"🚗 Pickup: {booking.pickup_location} → 🏁 Drop: {booking.drop_location}",
+                                "images": [f"{settings.DOMAIN}{booking.car.image.url}"],
+                            },
+                            "unit_amount": amount_cents,  # بالدولار
+                            
+                        },
+                        "quantity": 1,
+                    }
+                ],
+        metadata={"booking_id": str(booking.id), "user_id": str(request.user.id)},
+        success_url=f"{settings.DOMAIN}/payment/success/?session_id={{CHECKOUT_SESSION_ID}}&booking={booking.id}",
+        cancel_url=f"{settings.DOMAIN}/payment/cancel/?booking={booking.id}",
+    )
+
+    return HttpResponseRedirect(session.url)
+
+
+@login_required(login_url="login")
+def payment_success(request):
+    booking_id = request.GET.get("booking")
+
+    if booking_id:
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+
+            # ✅ تحديث حالة الحجز تلقائيًا إلى approved
+            booking.status = "paid"
+            booking.save()
+
+            # ✉️ إرسال رسالة تأكيد بسيطة (اختياري)
+            send_mail(
+                "✅ Payment Successful - Royal Cars",
+                f"Hello {request.user.username},\n\nYour payment for {booking.car.name} was successful! Your booking is now marked as paid.",
+                "noreply@royalcars.com",
+                [request.user.email],
+                fail_silently=True,
+            )
+
+            messages.success(request, "✅ Payment successful! Your booking is now marked as paid.")
+        except Booking.DoesNotExist:
+            messages.error(request, "⚠️ Booking not found.")
+    else:
+        messages.error(request, "⚠️ Invalid payment confirmation.")
+
+    return redirect("my_bookings")
+
+@login_required(login_url="login")
+def payment_cancel(request):
+    messages.info(request, "⏪ Payment canceled.")
+    return redirect("profile")
+
+
+stripe.api_key = getattr(settings, "STRIPE_SECRET_KEY", None)
+
+
+@login_required(login_url="login")
+@csrf_exempt
+def create_checkout_session(request):
+    if request.method == "POST":
+        try:
+            car = get_object_or_404(Car, pk=request.POST.get("car"))
+
+            # إنشاء حجز مؤقت
+            booking = Booking.objects.create(
+                user=request.user,
+                car=car,
+                pickup_location=request.POST.get("pickup_location"),
+                drop_location=request.POST.get("drop_location"),
+                pickup_date=request.POST.get("pickup_date"),
+                pickup_time=request.POST.get("pickup_time"),
+                special_request=request.POST.get("special_request", ""),
+            )
+
+            # إنشاء جلسة الدفع
+            checkout_session = stripe.checkout.Session.create(
+                mode="payment",
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": f"{booking.car.name} (1 day)",
+                                "description": f"🚗 Pickup: {booking.pickup_location}→ 🏁 Drop: {booking.drop_location}",
+                                "images": [f"{settings.DOMAIN}{booking.car.image.url}"],
+                            },
+                            "unit_amount": int(float(car.price) * 100),  # بالدولار
+                            
+                        },
+                        "quantity": 1,
+                    }
+                ],
+                success_url=f"{settings.DOMAIN}/payment/success/?booking={booking.id}",
+                cancel_url=f"{settings.DOMAIN}/payment/cancel/?booking={booking.id}",
+            )
+
+            return JsonResponse({"url": checkout_session.url})
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
+    return JsonResponse({"error": "Invalid request"})
+
+
+
+
 
 
 # ===========================

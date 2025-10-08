@@ -2,22 +2,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>ROYAL CARS - Car Rental HTML Template</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
-    <link href="{% static 'img/favicon.ico' %}" rel="icon">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Rubik&display=swap" rel="stylesheet"> 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css" rel="stylesheet">
-    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
-    <link href="{% static 'lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css' %}" rel="stylesheet" />
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>My Bookings - Royal Cars</title>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <link href="{% static 'img/favicon.ico' %}" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Rubik&display=swap" rel="stylesheet"> 
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css" rel="stylesheet">
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  <style>
+
+    .page-header {
+      background-color: #212529;
+      color: white;
+      padding: 4rem 0;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    th {
+      background-color: #343a40 !important;
+      color: white;
+    }
+    .badge {
+      font-size: 0.9rem;
+    }
+    
+  </style>
 </head>
-<body>
-    <div class="container-fluid bg-dark py-3 px-lg-5 d-none d-lg-block">
+<body class="bg-light">
+  <div class="container-fluid bg-dark py-3 px-lg-5 d-none d-lg-block">
         <div class="row">
             <div class="col-md-6 text-center text-lg-left mb-2 mb-lg-0">
                 <div class="d-inline-flex align-items-center">
@@ -37,7 +58,6 @@
             </div>
         </div>
     </div>
-
     <!-- Navbar Start -->
         <div class="container-fluid position-relative nav-bar p-0">
   <div class="position-relative px-lg-5" style="z-index: 9;">
@@ -77,27 +97,89 @@
 </div>
     <!-- Navbar End -->
 
-    <div class="container-fluid page-header">
-        <h1 class="display-3 text-uppercase text-white mb-3">About</h1>
-        <div class="d-inline-flex text-white">
-            <h6 class="text-uppercase m-0"><a class="text-white" href="{% url 'index' %}">Home</a></h6>
-            <h6 class="text-body m-0 px-3">/</h6>
-            <h6 class="text-uppercase text-body m-0">About</h6>
-        </div>
-    </div>
 
-    <div class="container-fluid py-5">
-        <div class="container pt-5 pb-3">
-            <h1 class="display-4 text-uppercase text-center mb-5">Welcome To <span class="text-primary">Royal Cars</span></h1>
-            <div class="row justify-content-center">
-                <div class="col-lg-10 text-center">
-                    <img class="w-75 mb-4" src="{% static 'img/about.png' %}" alt="">
-                    <p>Justo et eos et ut takimata sed sadipscing dolore lorem, ...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-<!-- footer        //////////////////////   -->
+<!-- Alerts -->
+{% if messages %}
+  <div class="container mt-4">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Bookings Table -->
+<div class="container my-5">
+  <div class="card p-4">
+    <h3 class="text-center text-primary mb-4"><i class="fas fa-car"></i> My Bookings</h3>
+
+    {% if bookings %}
+      <div class="table-responsive">
+        <table class="table table-hover text-center align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Car</th>
+              <th>Pickup</th>
+              <th>Drop</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for booking in bookings %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ booking.car.name }}</td>
+              <td>{{ booking.pickup_location }}</td>
+              <td>{{ booking.drop_location }}</td>
+              <td>{{ booking.pickup_date }}</td>
+              <td>{{ booking.pickup_time }}</td>
+              <td>
+                {% if booking.status == "pending" %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% elif booking.status == "approved" %}
+                  <span class="badge bg-success">Approved</span>
+                {% elif booking.status == "rejected" %}
+                  <span class="badge bg-danger">Rejected</span>
+                {% elif booking.status == "paid" %}
+                  <span class="badge bg-primary">Paid</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ booking.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if booking.status == "approved" %}
+                  <a href="{% url 'pay_booking' booking.id %}" class="btn btn-sm btn-success">
+                    💳 Pay Now
+                  </a>
+                {% elif booking.status == "paid" %}
+                  <span class="text-success fw-bold">✅ Paid</span>
+                {% elif booking.status == "pending" %}
+                  <span class="text-warning fw-bold">⏳ Waiting</span>
+                {% elif booking.status == "rejected" %}
+                  <span class="text-danger fw-bold">❌ Rejected</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info text-center">
+        You don't have any bookings yet.
+      </div>
+    {% endif %}
+  </div>
+</div>
+      <!-- footer        //////////////////////   -->
     <div class="container-fluid bg-secondary py-5 px-sm-3 px-md-5" style="margin-top: 90px;">
         <div class="row pt-5">
             <div class="col-lg-3 col-md-6 mb-5">
@@ -159,15 +241,5 @@
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
     
     <!-- end footer        ////////////////////// -->
-
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
-    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
-    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'lib/tempusdominus/js/moment.min.js' %}"></script>
-    <script src="{% static 'lib/tempusdominus/js/moment-timezone.min.js' %}"></script>
-    <script src="{% static 'lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

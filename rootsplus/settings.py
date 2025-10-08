@@ -129,6 +129,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "core.User"
 import os
+from dotenv import load_dotenv
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -148,6 +149,9 @@ EMAIL_HOST_USER = "hexamystic00@gmail.com"
 EMAIL_HOST_PASSWORD = "ydsn hblb wklk bddm"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+DOMAIN = os.getenv("DOMAIN", "http://127.0.0.1:8000")

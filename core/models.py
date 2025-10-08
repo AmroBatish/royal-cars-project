@@ -70,11 +70,13 @@ class Booking(models.Model):
     STATUS_PENDING = "pending"
     STATUS_APPROVED = "approved"
     STATUS_REJECTED = "rejected"
+    STATUS_PAID = "paid"
 
     STATUS_CHOICES = [
         (STATUS_PENDING, "Pending"),
         (STATUS_APPROVED, "Approved"),
         (STATUS_REJECTED, "Rejected"),
+        (STATUS_PAID, "Paid"),
     ]
 
     user = models.ForeignKey(
