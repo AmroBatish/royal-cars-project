@@ -124,10 +124,13 @@
               <th>Car</th>
               <th>Pickup</th>
               <th>Drop</th>
-              <th>Date</th>
-              <th>Time</th>
+              <th>Pickup Date</th>
+              <th>Pickup Time</th>
+              <th>Return Date</th>   
+              <th>Return Time</th>  
               <th>Status</th>
               <th>Action</th>
+              <th>Comment</th>
             </tr>
           </thead>
           <tbody>
@@ -139,6 +142,8 @@
               <td>{{ booking.drop_location }}</td>
               <td>{{ booking.pickup_date }}</td>
               <td>{{ booking.pickup_time }}</td>
+              <td>{{ booking.return_date }}</td>
+              <td>{{ booking.return_time }}</td> 
               <td>
                 {% if booking.status == "pending" %}
                   <span class="badge bg-warning text-dark">Pending</span>
@@ -167,6 +172,44 @@
                   <span class="text-muted">—</span>
                 {% endif %}
               </td>
+              <td>
+              {% if True %}
+                <button class="btn btn-sm btn-outline-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#commentModal{{ booking.id }}">
+                  ✍️ Add Comment
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="commentModal{{ booking.id }}" tabindex="-1" aria-labelledby="commentLabel{{ booking.id }}" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="commentLabel{{ booking.id }}">Add Comment for {{ booking.car.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <form method="POST" action="{% url 'add_comment' booking.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                          <label class="form-label">Rating (1–5)</label>
+                          <input type="number" name="rating" min="1" max="5" value="5" class="form-control mb-3" required>
+
+                          <label class="form-label">Your Comment</label>
+                          <textarea name="comment" class="form-control" rows="4" placeholder="Write your experience..." required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              {% elif booking.has_comment %}
+                <span class="text-success fw-bold">✅ Comment Added</span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
             </tr>
           {% endfor %}
           </tbody>
@@ -179,6 +222,136 @@
     {% endif %}
   </div>
 </div>
+<!-- 🔒 عقد التأجير - مودال رسمي -->
+<div class="modal fade" id="contractModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="border:2px solid #ff6600; border-radius:14px; overflow:hidden; font-family:'Poppins', sans-serif;">
+      
+      <!-- Header -->
+      <div class="modal-header" style="background:#111; color:white;">
+        <h4 class="modal-title">
+          <i class="bi bi-file-earmark-text"></i> Vehicle Rental Agreement
+        </h4>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" style="background:#fff;">
+        <div class="contract-paper" style="max-height:480px; overflow-y:auto; border:1px solid #ccc; padding:35px 40px; border-radius:8px; background:#fdfdfd; box-shadow:inset 0 0 8px rgba(0,0,0,0.05);">
+
+          <div style="text-align:center; margin-bottom:15px;">
+            <h3 style="font-weight:700; color:#111;">ROYAL CARS RENTAL AGREEMENT</h3>
+            <p style="font-size:14px; color:#666;">Date: <b>{% now "F d, Y" %}</b></p>
+          </div>
+
+          <p>
+            This Rental Agreement ("Agreement") is made between 
+            <b>
+              {% if booking.car.owner and booking.car.owner.company_name %}
+                {{ booking.car.owner.company_name }}
+              {% else %}
+                Royal Cars Company
+              {% endif %}
+            </b> (“the Company”) and 
+            <b>{{ request.user.get_full_name|default:request.user.username }}</b> (“the Renter”).
+          </p>
+
+          <h5 style="margin-top:20px; color:#ff6600;">1. Vehicle Information</h5>
+          {% if booking %}
+            <p>
+              The rented vehicle is identified as <b>{{ booking.car.name }}</b>. 
+              The vehicle shall be provided in good mechanical condition, free of known defects.
+            </p>
+          {% else %}
+            <p>The rented vehicle details are currently unavailable.</p>
+          {% endif %}
+
+          <h5 style="margin-top:20px; color:#ff6600;">2. Rental Period</h5>
+          {% if booking %}
+            <p>
+              The rental period begins on <b>{{ booking.pickup_date }}</b> 
+              and ends on <b>{{ booking.return_date }}</b>, as mutually agreed upon by both parties.
+            </p>
+          {% else %}
+            <p>Rental dates are unavailable.</p>
+          {% endif %}
+
+          <h5 style="margin-top:20px; color:#ff6600;">3. Responsibilities</h5>
+          <ul>
+            <li>The Renter shall operate the vehicle safely and in accordance with all traffic laws.</li>
+            <li>The Renter is responsible for any fines, penalties, or damages incurred during the rental period.</li>
+            <li>Smoking, racing, or illegal use of the vehicle is strictly prohibited.</li>
+            <li>Fuel, maintenance, and cleanliness are the responsibility of the Renter during the rental period.</li>
+          </ul>
+
+          <h5 style="margin-top:20px; color:#ff6600;">4. Payment Terms</h5>
+          {% if booking %}
+            <p>
+              Total payment of <b>${{ booking.car.price }}</b> has been received successfully through Stripe. 
+              The payment confirms the Renter’s acceptance of this agreement.
+            </p>
+          {% else %}
+            <p>Payment details are not available.</p>
+          {% endif %}
+
+          <h5 style="margin-top:20px; color:#ff6600;">5. Liability & Insurance</h5>
+          <p>
+            The Renter assumes full responsibility for the vehicle while in possession. 
+            Insurance coverage applies as per company policy.
+          </p>
+
+          <h5 style="margin-top:20px; color:#ff6600;">6. Termination</h5>
+          <p>
+            The Company reserves the right to terminate this agreement and repossess the vehicle 
+            in case of violation of any term herein.
+          </p>
+
+          <h5 style="margin-top:20px; color:#ff6600;">7. Acceptance</h5>
+          <p>
+            By scrolling to the end and clicking “I Agree”, the Renter acknowledges having read 
+            and fully understood all terms of this agreement.
+          </p>
+
+          <div style="margin-top:35px; border-top:1px solid #ccc; padding-top:15px;">
+            <p><b>Renter’s Name:</b> {{ request.user.get_full_name|default:request.user.username }}</p>
+            <p><b>Signature:</b> ____________________________</p>
+            <p><b>Date:</b> {% now "F d, Y" %}</p>
+          </div>
+
+        </div>
+
+        <div id="scrollNotice" class="text-center mt-3" style="font-size:14px; color:#777;">
+          ⬇️ Please scroll to the bottom of the contract to enable the “I Agree” button.
+        </div>
+
+        <div class="text-center mt-4">
+          <label style="font-size:15px;">
+            <input type="checkbox" id="agreeBox" style="margin-right:6px;"> 
+            I have read and agree to all terms of this contract.
+          </label>
+        </div>
+      </div>
+
+      <!-- Footer -->
+        <div class="modal-footer" style="background:#111;">
+
+          <!-- 🧾 الفورم اللي يرسل موافقة العقد -->
+          <form id="contractForm" method="POST" action="{% url 'approve_contract' %}">
+            {% csrf_token %}
+            <input type="hidden" name="booking_id" id="bookingIdInput" value="">
+            <button id="agreeBtn" type="submit"
+                    class="btn"
+                    style="background:#ff6600; color:white; border:none; padding:10px 35px; font-size:16px; border-radius:6px; transition:0.2s;"
+                    disabled>
+              ✅ I Agree
+            </button>
+          </form>
+
+        </div>
+
+    </div>
+  </div>
+</div>
+
       <!-- footer        //////////////////////   -->
     <div class="container-fluid bg-secondary py-5 px-sm-3 px-md-5" style="margin-top: 90px;">
         <div class="row pt-5">
@@ -239,7 +412,83 @@
     </div>
 
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
-    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- end footer        ////////////////////// -->
+     <script>
+document.addEventListener("DOMContentLoaded", function() {
+  const params = new URLSearchParams(window.location.search);
+  const showContract = params.get("show_contract");
+ const bookingId = params.get("booking") || params.get("booking_id");
+
+  if (showContract === "true" && bookingId) {
+    const modalEl = document.getElementById("contractModal");
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    const agreeBox = document.getElementById("agreeBox");
+    const agreeBtn = document.getElementById("agreeBtn");
+    const contractBox = document.querySelector(".contract-paper");
+    const scrollNotice = document.getElementById("scrollNotice");
+    window.contractAccepted = false;
+
+    // 🔒 منع إغلاق المودال إلا بعد الموافقة
+    modalEl.addEventListener('hide.bs.modal', function(e) {
+      if (!window.contractAccepted) e.preventDefault();
+    });
+
+    let scrolledToBottom = false;
+
+    // ✅ تحقق إن المستخدم وصل لنهاية النص
+    contractBox.addEventListener("scroll", function() {
+      const scrollPosition = contractBox.scrollTop + contractBox.clientHeight;
+      const scrollHeight = contractBox.scrollHeight;
+
+      if (scrollPosition >= scrollHeight - 10) {
+        scrolledToBottom = true;
+        scrollNotice.textContent = "✅ You can now click 'I Agree' to accept the contract.";
+        checkIfCanEnable();
+      }
+    });
+
+    // ✅ تفعيل الزر فقط بعد التمرير + الموافقة على checkbox
+    agreeBox.addEventListener("change", checkIfCanEnable);
+
+    function checkIfCanEnable() {
+      if (scrolledToBottom && agreeBox.checked) {
+        agreeBtn.disabled = false;
+      } else {
+        agreeBtn.disabled = true;
+      }
+    }
+
+    // ✅ عند الضغط على زر الموافقة
+    agreeBtn.addEventListener("click", function() {
+      fetch("{% url 'approve_contract' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "booking_id=" + bookingId
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          window.contractAccepted = true;
+          modal.hide();
+          alert("✅ Contract accepted successfully!");
+          window.location.replace("/my-bookings/");
+        } else {
+          alert("⚠️ Something went wrong while approving the contract.");
+        }
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        alert("⚠️ Network error. Please try again.");
+      });
+    });
+  }
+});
+</script>
 </body>
 </html>

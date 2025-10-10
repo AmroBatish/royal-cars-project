@@ -20,6 +20,8 @@
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 
     <!-- Libraries Stylesheet -->
     <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
@@ -30,6 +32,176 @@
 
     <!-- Template Stylesheet -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+
+.modal-content {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(90deg, #F77D0A, #f8b739);
+  border: none;
+  padding: 15px 25px;
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-body {
+  background-color: #f9f9f9;
+  padding: 25px 30px;
+  border-radius: 0 0 10px 10px;
+}
+
+.modal-body label {
+  font-weight: 600;
+  color: #444;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.modal-body input,
+.modal-body textarea,
+.modal-body select {
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  box-shadow: none;
+  transition: 0.2s ease-in-out;
+}
+
+.modal-body input:focus,
+.modal-body textarea:focus,
+.modal-body select:focus {
+  border-color: #F77D0A;
+  box-shadow: 0 0 4px rgba(247, 125, 10, 0.3);
+}
+
+#current-image-preview {
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #eee;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+}
+
+#current-image-preview:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-footer {
+  border: none;
+  background-color: #fff;
+  padding: 15px 25px;
+}
+
+.btn {
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary {
+  background-color: #1f1f2e;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #33334d;
+}
+
+.btn-success {
+  
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #ff961f;
+  box-shadow: 0 4px 10px rgba(247, 125, 10, 0.3);
+}
+
+.table {
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.table thead {
+  background: linear-gradient(90deg, #1f1f2e, #2d2d44);
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.table th {
+  padding: 15px 12px;
+  font-size: 0.9rem;
+  border: none;
+}
+
+.table td {
+  vertical-align: middle;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: #333;
+  border-color: #f0f0f0;
+  background-color: #fff;
+}
+
+.table tbody tr:hover {
+  background-color: #fff9f3; /* soft orange hover */
+  transition: 0.25s ease;
+}
+
+.table td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.table td i {
+  margin-right: 5px;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #F77D0A;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #ff961f;
+}
+
+.btn-danger {
+  background-color: #d33;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #e55353;
+}
+
+/* Header Title */
+h3.mb-3 {
+  font-weight: 700;
+  color: #1f1f2e;
+  letter-spacing: 0.5px;
+  border-left: 5px solid #F77D0A;
+  padding-left: 10px;
+}
+    </style>
 </head>
 <body class="bg-white">
 
@@ -108,7 +280,7 @@
             Add New Car
         </div>
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data" action="{% url 'add_car' %}">
+            <form method="post" id="add-car-form" enctype="multipart/form-data" action="{% url 'add_car' %}">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -153,6 +325,7 @@
     <table class="table table-bordered bg-white">
         <thead class="thead-dark">
             <tr>
+                <th>Image</th>
                 <th>Car</th>
                 <th>Year</th>
                 <th>Transmission</th>
@@ -163,18 +336,140 @@
         <tbody>
             {% for car in cars %}
             <tr>
+                <td>
+                    {% if car.image %}
+                    <img src="{{ car.image.url }}" 
+                        alt="{{ car.name }}" 
+                        class="img-thumbnail shadow-sm"
+                        style="width: 70px; height: 50px; object-fit: cover; border-radius: 6px;">
+                    {% else %}
+                    <span class="text-muted">No Image</span>
+                    {% endif %}
+                </td>
                 <td>{{ car.name }}</td>
                 <td>{{ car.year }}</td>
                 <td>{{ car.transmission }}</td>
                 <td>{{ car.mileage }}</td>
                 <td>${{ car.price }}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" 
+                            type="button"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editCarModal" 
+                            data-id="{{ car.id }}" 
+                            data-name="{{ car.name }}"
+                            data-year="{{ car.year }}"
+                            data-transmission="{{ car.transmission }}"
+                            data-mileage="{{ car.mileage }}"
+                            data-price="{{ car.price }}"
+                             {% if car.image %}
+                                data-image="{{ car.image.url }}"
+                            {% endif %}
+                            data-description="{{ car.description }}">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+
+                    <button type="button" class="btn btn-sm btn-danger delete-car-btn" data-id="{{ car.id }}">
+                    <i class="fa-solid fa-trash-can"></i> Delete
+                    </button>
+                </td>
             </tr>
             {% empty %}
             <tr><td colspan="5" class="text-center">No cars added yet</td></tr>
             {% endfor %}
         </tbody>
     </table>
+ <!-- Edit Car Modal -->
+<div class="modal fade" id="editCarModal" tabindex="-1" aria-labelledby="editCarModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      
+      <form method="post" enctype="multipart/form-data" id="edit-car-form">
+        {% csrf_token %}
+        
+        <!-- Header -->
+        <div class="modal-header text-white" 
+             style="background: linear-gradient(90deg, #F77D0A, #f8b739);">
+          <h5 class="modal-title fw-bold" id="editCarModalLabel">
+            <i class="fa-solid fa-car me-2"></i> Edit Car
+          </h5>
+          <button type="button" class="btn text-white fs-5" 
+                  data-bs-dismiss="modal" aria-label="Close"
+                  style="border: none; background: transparent;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body bg-light">
+          <input type="hidden" name="car_id" id="edit-car-id">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Name</label>
+              <input type="text" name="name" id="edit-name" class="form-control border-primary-subtle" required>
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Year</label>
+              <input type="number" name="year" id="edit-year" class="form-control border-primary-subtle" required>
+            </div>
+            
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Transmission</label>
+              <select name="transmission" id="edit-transmission" class="form-select border-primary-subtle" required>
+                <option value="AUTO">Automatic</option>
+                <option value="MANUAL">Manual</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Mileage</label>
+              <input type="text" name="mileage" id="edit-mileage" class="form-control border-primary-subtle">
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Price / Day ($)</label>
+              <input type="number" step="0.01" name="price" id="edit-price" class="form-control border-primary-subtle" required>
+            </div>
+            <div class="col-md-4 mb-3 text-center">
+                <label class="form-label fw-semibold">Current Image</label><br>
+                <img id="current-image-preview" 
+                    src="https://via.placeholder.com/150x100?text=No+Image" 
+                    alt="Current image" 
+                    class="img-fluid rounded border" 
+                    style="max-height: 120px; object-fit: cover;">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">New Image (optional)</label>
+              <input type="file" name="image" class="form-control border-primary-subtle">
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label fw-semibold">Description</label>
+              <textarea name="description" id="edit-description" rows="3" class="form-control border-primary-subtle"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer bg-white border-0">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark me-1"></i> Cancel
+          </button>
+          <button type="submit" class="btn text-white px-4" 
+                  style="background-color:#F77D0A; border:none;">
+            <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
+          </button>
+        </div>
+
+      </form>
     </div>
+  </div>
+</div>
+
+    </div>
+
     <!-- Bookings -->
     <div class="container-fluid bg-white  py-5">
         <h3 class="mt-5 mb-3">Bookings</h3>
@@ -199,24 +494,27 @@
                     <td>{{ booking.drop_location }}</td>
                     <td>{{ booking.pickup_date }} {{ booking.pickup_time }}</td>
                     <td id="status-{{ booking.id }}">
-                    {% if booking.status == "pending" %}
-                        <span class="badge badge-warning">Pending</span>
-                    {% elif booking.status == "approved" %}
-                        <span class="badge badge-success">Approved</span>
-                    {% else %}
-                        <span class="badge badge-danger">Rejected</span>
-                    {% endif %}
-                </td>
+                        {% if booking.status == "pending" %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% elif booking.status == "approved" %}
+                            <span class="badge badge-success">Approved</span>
+                        {% elif booking.status == "paid" %}
+                            <span class="badge badge-primary">Paid</span>
+                        {% elif booking.status == "rejected" %}
+                            <span class="badge badge-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+
                 <!-- <td>
                     {% if booking.status == "pending" %}
                         <button class="btn btn-sm btn-success approve-btn" data-id="{{ booking.id }}">Approve</button>
                         <button class="btn btn-sm btn-danger reject-btn" data-id="{{ booking.id }}">Reject</button>
                     {% endif %}
                 </td> -->
-                <td class="text-center">
+                <td class="text-center ">
                     {% if booking.status == "pending" %}
-                        <div class="btn-group" role="group" aria-label="Booking Actions">
-                            <a href="{% url 'approve_booking' booking.id %}" class="btn btn-sm btn-success px-3">
+                        <div class=" d-inline-flex justify-content-center align-items-center gap-2" role="group" aria-label="Booking Actions">
+                            <a href="{% url 'approve_booking' booking.id %}" class="btn btn-sm btn-success px-3 ">
                                 <i class="bi bi-check-circle"></i> Approve
                             </a>
                             <a href="{% url 'reject_booking' booking.id %}" class="btn btn-sm btn-danger px-3">
@@ -299,6 +597,91 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+  // 🧩 Helper: Get CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // 🧩 Handle Add Car (AJAX)
+  const addCarForm = document.getElementById('add-car-form');
+  addCarForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch(this.action, {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-CSRFToken': csrftoken },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          // ✅ إضافة السيارة للجدول بدون إعادة تحميل
+          const tableBody = document.querySelector('table tbody');
+          const newRow = document.createElement('tr');
+
+          newRow.innerHTML = `
+            <td>
+              ${data.image_url ? `<img src="${data.image_url}" alt="${data.name}" class="img-thumbnail shadow-sm" style="width:70px; height:50px; object-fit:cover; border-radius:6px;">` : ''}
+            </td>
+            <td>${data.name}</td>
+            <td>${data.year}</td>
+            <td>${data.transmission}</td>
+            <td>${data.mileage}</td>
+            <td>$${data.price}</td>
+            <td>
+              <button class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-danger">
+                <i class="fa-solid fa-trash-can"></i> Delete
+              </button>
+            </td>
+          `;
+
+          tableBody.appendChild(newRow);
+
+          // ✅ إفراغ النموذج بعد الإرسال
+          addCarForm.reset();
+
+          // ✅ رسالة نجاح
+          Swal.fire({
+            title: 'Car Added!',
+            text: 'The car was added successfully.',
+            icon: 'success',
+            confirmButtonColor: '#F77D0A',
+            confirmButtonText: 'OK',
+          });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.error || 'Failed to add the car.',
+                icon: 'error',
+                confirmButtonColor: '#6c63ff',
+                confirmButtonText: 'OK',
+            });
+            }
+      })
+      .catch(() => {
+        Swal.fire('Error!', 'Something went wrong while adding the car.', 'error');
+      });
+  });
+});
+
 $(document).ready(function() {
     $(".approve-btn").click(function() {
         let bookingId = $(this).data("id");
@@ -338,6 +721,135 @@ $(document).ready(function() {
         });
     });
 });
+document.addEventListener('DOMContentLoaded', function() {
+
+  // 🔹 الحصول على CSRF Token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // 🔹 حذف السيارة (AJAX + SweetAlert)
+  document.querySelectorAll('.delete-car-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const carId = this.dataset.id;
+      const row = this.closest('tr');
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This car will be permanently deleted!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      }).then(result => {
+        if (result.isConfirmed) {
+          fetch(`/delete_car/${carId}/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken}
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              row.style.transition = 'opacity 0.3s';
+              row.style.opacity = 0;
+              setTimeout(() => row.remove(), 300);
+              Swal.fire('Deleted!', 'The car has been deleted successfully.', 'success');
+            }
+          });
+        }
+      });
+    });
+  });
+
+  // 🔹 تعديل السيارة (AJAX)
+  const editForm = document.getElementById('edit-car-form');
+  editForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("{% url 'edit_car' %}", {
+      method: 'POST',
+      body: formData,
+      headers: {'X-CSRFToken': csrftoken}
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // تحديث الصف مباشرة
+        const row = document.querySelector(`button[data-id="${data.id}"]`).closest('tr');
+        if (data.image_url) {
+        const imgCell = row.querySelector('td:first-child');
+        imgCell.innerHTML = `
+          <img src="${data.image_url}" 
+               alt="${data.name}" 
+               class="img-thumbnail shadow-sm"
+               style="width: 70px; height: 50px; object-fit: cover; border-radius: 6px;">
+        `;
+      }
+        row.querySelector('td:nth-child(2)').textContent = data.name;
+      row.querySelector('td:nth-child(3)').textContent = data.year;
+      row.querySelector('td:nth-child(4)').textContent = data.transmission;
+      row.querySelector('td:nth-child(5)').textContent = data.mileage;
+      row.querySelector('td:nth-child(6)').textContent = `$${data.price}`;
+
+        // إغلاق المودال
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editCarModal'));
+        modal.hide();
+
+       Swal.fire({
+            title: 'Updated!',
+            text: 'Changes have been saved successfully.',
+            icon: 'success',
+            confirmButtonColor: '#F77D0A', 
+            confirmButtonText: 'OK'
+            });
+      } else {
+        Swal.fire('Error!', 'Failed to update the car.', 'error');
+      }
+    })
+    .catch(() => Swal.fire('Error!', 'An error occurred while connecting.', 'error'));
+  });
+
+});
+    // تعبئة الحقول داخل المودال
+document.addEventListener('DOMContentLoaded', function() {
+    const editCarModal = document.getElementById('editCarModal');
+    
+    editCarModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; // الزر اللي فتح المودال
+        
+    
+        document.getElementById('edit-car-id').value = button.getAttribute('data-id');
+        document.getElementById('edit-name').value = button.getAttribute('data-name');
+        document.getElementById('edit-year').value = button.getAttribute('data-year');
+        document.getElementById('edit-transmission').value = button.getAttribute('data-transmission');
+        document.getElementById('edit-mileage').value = button.getAttribute('data-mileage');
+        document.getElementById('edit-price').value = button.getAttribute('data-price');
+        document.getElementById('edit-description').value = button.getAttribute('data-description');
+
+        
+        const imgPreview = document.getElementById('current-image-preview');
+        const imageUrl = button.getAttribute('data-image');
+        if (imgPreview) {
+            imgPreview.src = imageUrl ? imageUrl : 'https://via.placeholder.com/150x100?text=No+Image';
+        }
+    });
+});
 </script>
 
     <!-- JavaScript Libraries -->
@@ -349,6 +861,8 @@ $(document).ready(function() {
     <script src="{% static 'lib/tempusdominus/js/moment.min.js' %}"></script>
     <script src="{% static 'lib/tempusdominus/js/moment-timezone.min.js' %}"></script>
     <script src="{% static 'lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>

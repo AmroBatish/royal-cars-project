@@ -21,6 +21,8 @@ urlpatterns = [
     path('booking/<int:booking_id>/reject/', views.reject_booking, name="reject_booking"),
     path('owner/dashboard/', views.owner_dashboard, name="owner_dashboard"),
     path('owner/add-car/', views.add_car, name="add_car"),
+    path('edit_car/', views.edit_car, name='edit_car'),
+path('delete_car/<int:car_id>/', views.delete_car, name='delete_car'),
     path('owner/<int:owner_id>/cars/', views.owner_cars, name="owner_cars"),
     path('owner/<int:owner_id>/', views.owner_profile, name="owner_profile"),
     path('companies/', views.companies_list, name="companies_list"),
@@ -28,4 +30,6 @@ urlpatterns = [
     path("booking/<int:booking_id>/pay/", views.pay_booking, name="pay_booking"),
     path("payment/success/", views.payment_success, name="payment_success"),
     path("payment/cancel/", views.payment_cancel, name="payment_cancel"),
+    path("bookings/<int:booking_id>/comment/", views.add_comment, name="add_comment"),
+    path('approve_contract/', views.approve_contract, name='approve_contract'),
 ]

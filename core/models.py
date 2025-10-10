@@ -97,12 +97,38 @@ class Booking(models.Model):
     drop_location = models.CharField(max_length=200)
     pickup_date = models.DateField()
     pickup_time = models.TimeField()
+    return_date = models.DateField()
+    return_time = models.TimeField()
     special_request = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Booking #{self.pk} - {self.user} → {self.car}"
+
+    class Meta:
+        ordering = ["-created_at"]
+# =====================
+# Review Model
+# =====================
+class Review(models.Model):
+    booking = models.OneToOneField(
+        Booking, on_delete=models.CASCADE, related_name="review"
+    )
+    car = models.ForeignKey(
+        Car, on_delete=models.CASCADE, related_name="reviews"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reviews"
+    )
+    rating = models.PositiveIntegerField(default=5)  # من 1 إلى 5 مثلاً
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review by {self.user} on {self.car}"
 
     class Meta:
         ordering = ["-created_at"]
